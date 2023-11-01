@@ -246,6 +246,7 @@ class CLAM_SB(nn.Module):
 
         # Aggregate the outputs (e.g., by averaging)
         aggregated_output = transformer_outputs.mean(dim=1)  # [1, hidden_size]
+        print(a)
 
         # Pass through final classifier
         logits2 = self.classifier_tr(aggregated_output)  # [1, num_classes]     

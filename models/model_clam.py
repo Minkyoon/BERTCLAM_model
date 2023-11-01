@@ -126,11 +126,11 @@ class CLAM_SB(nn.Module):
         instance_loss_fn=nn.CrossEntropyLoss(), subtyping=False):
         
         super(CLAM_SB, self).__init__()
-        self.size_dict = {"small": [1024, 512, 256], "big": [1024, 512, 384]}
+        self.size_dict = {"small": [1024, 768, 512], "big": [1024, 512, 384]}
         tabular_size = 60 ####### 수정 필요!!
         self.size_arg = size_arg
         size = self.size_dict[size_arg]
-        fc = [nn.Linear(size[0], size[1]), nn.ReLU()]
+        fc = [nn.Linear(size[0], 768), nn.ReLU()]
        
         if dropout:
             fc.append(nn.Dropout(0.25))
@@ -140,7 +140,7 @@ class CLAM_SB(nn.Module):
             attention_net = Attn_Net(L = size[1], D = size[2], dropout = dropout, n_classes = 1)
         fc.append(attention_net)
         self.attention_net = nn.Sequential(*fc)
-        self.attention_module=MultiHeadAttention(512, 49,1 )
+        self.attention_module=MultiHeadAttention(768, 49,1 )
         self.classifiers = nn.Linear(size[1], n_classes)
         # self.classifiers = nn.Linear(size[1] + tabular_size, n_classes)
         instance_classifiers = [nn.Linear(size[1], 2) for i in range(n_classes)]
@@ -239,16 +239,22 @@ class CLAM_SB(nn.Module):
         A_reshaped = A.squeeze(0).unsqueeze(1)  # [50, 1]
 
         # h에 A를 element-wise로 곱함
-        weighted_h = h * A_reshaped  # [50, 512]
-       
-       
-        reduced_instances = self.dim_reduction(weighted_h)  # [k, 768]
+     
+  
         
         
-        transformer_outputs = self.transformer_encoder(inputs_embeds=reduced_instances.unsqueeze(0))[0]  # [1, k, hidden_size]
-
-        # Aggregate the outputs (e.g., by averaging)
-        aggregated_output = transformer_outputs.mean(dim=1)  # [1, hidden_size]
+       
+       
+        #reduced_instances = self.dim_reduction(weighted_h)  # [k, 768]
+        
+        
+        
+        transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
+        
+        
+        aggregated_output= transformer_outputs.squeeze(0) *  A_reshaped*h
+        aggregated_output=aggregated_output.sum(dim=0)
+        
 
         # Pass through final classifier
         logits2 = self.classifier_tr(aggregated_output)  # [1, num_classes]     
@@ -321,6 +327,9 @@ class CLAM_SB(nn.Module):
             results_dict = {}
         if return_features:
             results_dict.update({'features': M})
+
+        logits2=logits2.unsqueeze(0)
+
         return logits2, Y_prob, Y_hat, A_raw, results_dict, 
     
 class CLAM_MB(CLAM_SB):

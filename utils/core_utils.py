@@ -511,7 +511,7 @@ def summary(model, loader, n_classes):
         data, tabular, label = data.to(device), tabular.to(device), label.to(device)
         slide_id = slide_ids.iloc[batch_idx]
         with torch.no_grad():
-            logits, Y_prob, Y_hat, _, _,_ = model(data, tabular)
+            logits, Y_prob, Y_hat, _, _ = model(data, tabular)
 
         acc_logger.log(Y_hat, label)
         probs = Y_prob.cpu().numpy()
