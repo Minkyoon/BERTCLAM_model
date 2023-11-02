@@ -252,7 +252,7 @@ class CLAM_SB(nn.Module):
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
         
         
-        aggregated_output= transformer_outputs.squeeze(0) *  A_reshaped
+        aggregated_output= transformer_outputs.squeeze(0) *  A_reshaped * h
         aggregated_output=aggregated_output.sum(dim=0)
         
 
@@ -328,9 +328,9 @@ class CLAM_SB(nn.Module):
         if return_features:
             results_dict.update({'features': M})
 
-      #  logits2=logits2.unsqueeze(0)
+        logits2=logits2.unsqueeze(0)
 
-        return logits, Y_prob, Y_hat, A_raw, results_dict, 
+        return logits2, Y_prob, Y_hat, A_raw, results_dict, 
     
 class CLAM_MB(CLAM_SB):
     def __init__(self, gate = True, size_arg = "small", dropout = False, k_sample=8, n_classes=2,
