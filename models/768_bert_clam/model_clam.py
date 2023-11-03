@@ -156,7 +156,7 @@ class CLAM_SB(nn.Module):
         self.transformer_encoder = BertModel(config)        
         
         #self.transformer_encoder = BertModel.from_pretrained('bert-base-uncased')
-        self.classifier_tr = nn.Linear(self.transformer_encoder.config.hidden_size, 2)
+        self.classifier_tr = nn.Linear(self.transformer_encoder.config.hidden_size+49, 2)
         #self.alpha = torch.nn.Parameter(torch.tensor(0.5))  # 학습 가능한 가중치
             
         
@@ -252,13 +252,13 @@ class CLAM_SB(nn.Module):
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
         
         
-        aggregated_output= transformer_outputs.squeeze(0)  * A_reshaped
+        aggregated_output= transformer_outputs.squeeze(0) * h * A_reshaped
         
         
         aggregated_output=aggregated_output.sum(dim=0)
         tabular=tabular.squeeze(0)
     
-        #aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
+        aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
         
 
         # Pass through final classifier
@@ -295,7 +295,7 @@ class CLAM_SB(nn.Module):
         tabular=tabular.unsqueeze(0)
         table_feature_dim = tabular.size(1)
         attention_dim=128
-        drop_out_rate=0.25
+        drop_out_rate=0.2
         #attention_module = MultiModalAttention(image_feature_dim, table_feature_dim).to(device)
         #attention_module=MultiHeadAttention(image_feature_dim, table_feature_dim,7 ).to(device)
         #concat,  attention_score = attention_module(M, tabular)
