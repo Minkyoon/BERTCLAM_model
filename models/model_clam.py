@@ -259,9 +259,12 @@ class CLAM_SB(nn.Module):
         tabular=tabular.squeeze(0)
     
         #aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
-        
 
+        
+        aggregated_output= transformer_outputs.squeeze(0)
         # Pass through final classifier
+
+        aggregated_output=aggregated_output.sum(dim=0)
         
         logits2 = self.classifier_tr(aggregated_output)  # [1, num_classes]     
         
