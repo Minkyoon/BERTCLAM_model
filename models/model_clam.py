@@ -94,6 +94,8 @@ class MultiHeadAttention(nn.Module):
             
 
             # attended_image_feature와 attended_table_feature를 합침
+            print(attended_image_feature.shape)
+            print(attended_table_feature.shape)
             concat_feature = torch.cat([attended_image_feature, attended_table_feature], dim=1)
             attended_features.append(concat_feature)
 
@@ -156,7 +158,7 @@ class CLAM_SB(nn.Module):
         self.transformer_encoder = BertModel(config)        
         
         #self.transformer_encoder = BertModel.from_pretrained('bert-base-uncased')
-        self.classifier_tr = nn.Linear(self.transformer_encoder.config.hidden_size, 2)
+        self.classifier_tr = nn.Linear(self.transformer_encoder.config.hidden_size+49, 2)
         #self.alpha = torch.nn.Parameter(torch.tensor(0.5))  # 학습 가능한 가중치
             
         
@@ -237,35 +239,18 @@ class CLAM_SB(nn.Module):
         A = F.softmax(A, dim=1)  # softmax over N
         A_fi=A.squeeze(0)
         A_reshaped = A.squeeze(0).unsqueeze(1)  # [50, 1]
-
-        # h에 A를 element-wise로 곱함
-     
-  
-        
-        
-       
-       
-        #reduced_instances = self.dim_reduction(weighted_h)  # [k, 768]
-        
-        
-        
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
         
-        
         aggregated_output= transformer_outputs.squeeze(0)  * A_reshaped
-        
-        
-        aggregated_output=aggregated_output.sum(dim=0)
-        tabular=tabular.squeeze(0)
-        
-    
-        #aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
+       
 
         
-        aggregated_output= transformer_outputs.squeeze(0)
-        # Pass through final classifier
+        aggregated_output= transformer_outputs
 
-        aggregated_output=aggregated_output.sum(dim=0)
+        aggregated_output=aggregated_output.sum(dim=1)
+
+
+
         
         aggregated_output,score = self.attention_module(aggregated_output, tabular)
         
@@ -297,42 +282,16 @@ class CLAM_SB(nn.Module):
                 total_inst_loss /= len(self.instance_classifiers)
                 
         M = torch.mm(A, h)
-        image_feature_dim = M.size(1)
-        tabular=tabular.unsqueeze(0)
-        table_feature_dim = tabular.size(1)
-        attention_dim=128
-        drop_out_rate=0.25
-        #attention_module = MultiModalAttention(image_feature_dim, table_feature_dim).to(device)
-        #attention_module=MultiHeadAttention(image_feature_dim, table_feature_dim,7 ).to(device)
-        #concat,  attention_score = attention_module(M, tabular)
-        concat,score = self.attention_module(M, tabular)
-        
-         
-        #concat = torch.cat([M, tabular], dim=1)
-        
-        # classifier first input dim
-        
-       
-        logits  = self.classifiers(concat)
-        
-        alpha=0.7
-        
-       
-        logits = alpha * logits + (1 - alpha) * logits2
-        
-        # -> self.classifiers 코드를 수정 (기존 A.dim이 아니라, A.dim + tabular.dim으로 수정)
-        #logits = (logits+logits2)/2
-        
-        #onlybert
-        #logits = logits2
+
+
         
         
         
         
         
         # logits = self.classifiers(M)
-        Y_hat = torch.topk(logits, 1, dim = 1)[1]
-        Y_prob = F.softmax(logits, dim = 1)
+        Y_hat = torch.topk(logits2, 1, dim = 1)[1]
+        Y_prob = F.softmax(logits2, dim = 1)
         if instance_eval:
             results_dict = {'instance_loss': total_inst_loss, 'inst_labels': np.array(all_targets), 
             'inst_preds': np.array(all_preds)}
@@ -341,7 +300,7 @@ class CLAM_SB(nn.Module):
         if return_features:
             results_dict.update({'features': M})
 
-        logits2=logits2.unsqueeze(0)
+       
 
         return logits2, Y_prob, Y_hat, A_raw, results_dict, 
     
