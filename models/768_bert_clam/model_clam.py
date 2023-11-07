@@ -257,6 +257,7 @@ class CLAM_SB(nn.Module):
         
         aggregated_output=aggregated_output.sum(dim=0)
         tabular=tabular.squeeze(0)
+        concat,score = self.attention_module(aggregated_output, tabular)
     
         aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
         

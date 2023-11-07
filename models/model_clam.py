@@ -257,6 +257,7 @@ class CLAM_SB(nn.Module):
         
         aggregated_output=aggregated_output.sum(dim=0)
         tabular=tabular.squeeze(0)
+        
     
         #aggregated_output=torch.cat((aggregated_output,tabular), dim=0)
 
@@ -265,6 +266,8 @@ class CLAM_SB(nn.Module):
         # Pass through final classifier
 
         aggregated_output=aggregated_output.sum(dim=0)
+        
+        aggregated_output,score = self.attention_module(aggregated_output, tabular)
         
         logits2 = self.classifier_tr(aggregated_output)  # [1, num_classes]     
         
