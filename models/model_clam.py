@@ -241,12 +241,8 @@ class CLAM_SB(nn.Module):
         A_reshaped = A.squeeze(0).unsqueeze(1)  # [50, 1]
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
         
-        aggregated_output= transformer_outputs.squeeze(0)  * A_reshaped
-       
-
-        
-        aggregated_output= transformer_outputs
-
+        aggregated_output= transformer_outputs.squeeze(0)  * A_reshaped * h
+                   
         aggregated_output=aggregated_output.sum(dim=1)
 
 
