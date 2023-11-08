@@ -154,8 +154,8 @@ class CLAM_SB(nn.Module):
         )
         self.dim_reduction = nn.Linear(512, 768)
         config = BertConfig(  )
-        self.transformer_encoder = BertModel(config)        
-        
+        #self.transformer_encoder = BertModel(config)        
+        self.transformer_encoder = BertModel.from_pretrained('bert-base-uncased')
         #self.transformer_encoder = BertModel.from_pretrained('bert-base-uncased')
         self.classifier_tr = nn.Linear(self.transformer_encoder.config.hidden_size+49, 2)
         #self.alpha = torch.nn.Parameter(torch.tensor(0.5))  # 학습 가능한 가중치
@@ -239,10 +239,12 @@ class CLAM_SB(nn.Module):
         A_fi=A.squeeze(0)
         A_reshaped = A.squeeze(0).unsqueeze(1)  # [50, 1]
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
-        aggregated_output= (transformer_outputs+h)  * A_reshaped 
-                   
+        aggregated_output= transformer_outputs*  h   * A_reshaped 
+        
+        
+      
         aggregated_output=aggregated_output.sum(dim=1)
-
+ 
 
 
 
