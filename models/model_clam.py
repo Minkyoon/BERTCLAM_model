@@ -94,8 +94,7 @@ class MultiHeadAttention(nn.Module):
             
 
             # attended_image_feature와 attended_table_feature를 합침
-            print(attended_image_feature.shape)
-            print(attended_table_feature.shape)
+  
             concat_feature = torch.cat([attended_image_feature, attended_table_feature], dim=1)
             attended_features.append(concat_feature)
 
@@ -240,10 +239,10 @@ class CLAM_SB(nn.Module):
         A_fi=A.squeeze(0)
         A_reshaped = A.squeeze(0).unsqueeze(1)  # [50, 1]
         transformer_outputs = self.transformer_encoder(inputs_embeds=h.unsqueeze(0))[0]  # [1, k, hidden_size]
-        
-        aggregated_output= transformer_outputs.squeeze(0)  * A_reshaped * h
+        aggregated_output= (transformer_outputs+h)  * A_reshaped 
                    
         aggregated_output=aggregated_output.sum(dim=1)
+
 
 
 
